@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contas do Mês</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Syne',sans-serif;background:#0a0a0f;color:#e8e4d8;min-height:100vh;padding:0;overflow-x:hidden}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='512' height='512' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");background-size:200px}
+.app{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:2rem 1.5rem 4rem}
+header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(232,228,216,.08)}
+.header-left h1{font-size:.95rem;font-weight:400;color:rgba(232,228,216,.4);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.25rem}
+.month-display{font-size:2.2rem;font-weight:800;letter-spacing:-.02em;color:#e8e4d8;line-height:1}
+.header-right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:.5rem}
+.sync-status{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(232,228,216,.25);font-family:'Space Mono',monospace;display:flex;align-items:center;gap:.4rem}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:rgba(232,228,216,.2);flex-shrink:0;transition:background .3s}
+.sync-dot.syncing{background:#fdb834;animation:pulse 1s infinite}
+.sync-dot.ok{background:#c8f060}
+.sync-dot.err{background:#e05050}
+.progress-label{font-size:.7rem;color:rgba(232,228,216,.35);letter-spacing:.1em;text-transform:uppercase}
+.progress-bar-wrap{width:130px;height:3px;background:rgba(232,228,216,.08);border-radius:99px;overflow:hidden}
+.progress-bar{height:100%;background:#c8f060;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.progress-count{font-size:.75rem;color:rgba(232,228,216,.35);font-family:'Space Mono',monospace}
+.alert-banner{background:rgba(255,180,50,.07);border:1px solid rgba(255,180,50,.2);border-radius:10px;padding:.75rem 1rem;margin-bottom:1.5rem;display:none;align-items:center;gap:.75rem;font-size:.85rem;color:#fdb834}
+.alert-banner.visible{display:flex}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:1rem;margin-bottom:2.5rem}
+.card{background:rgba(232,228,216,.04);border:1px solid rgba(232,228,216,.1);border-radius:14px;padding:1.25rem 1.25rem 1rem;cursor:pointer;transition:all .25s ease;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
+.card:hover{border-color:rgba(232,228,216,.2);transform:translateY(-2px)}
+.card.paid{opacity:.35;background:rgba(232,228,216,.02);border-color:rgba(232,228,216,.05)}
+.card.paid:hover{opacity:.5;transform:translateY(-1px)}
+.card.urgent:not(.paid){border-color:rgba(255,180,50,.35);background:rgba(255,180,50,.04)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.card-day{font-family:'Space Mono',monospace;font-size:.68rem;color:rgba(232,228,216,.3);letter-spacing:.08em;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.day-badge{background:rgba(232,228,216,.07);border-radius:4px;padding:1px 6px;font-size:.65rem}
+.urgent-dot{width:6px;height:6px;border-radius:50%;background:#fdb834;margin-left:auto;animation:pulse 1.5s infinite}
+.paid-by{font-size:.62rem;color:rgba(232,228,216,.25);margin-left:auto;font-family:'Space Mono',monospace}
+.card-name{font-size:1.05rem;font-weight:700;color:#e8e4d8;margin-bottom:.9rem;letter-spacing:-.01em}
+.card.paid .card-name{text-decoration:line-through;color:rgba(232,228,216,.35)}
+.check-btn{display:flex;align-items:center;gap:.5rem;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(232,228,216,.35);transition:color .2s;background:none;border:none;cursor:pointer;padding:0;font-family:'Syne',sans-serif}
+.check-btn:hover{color:#c8f060}
+.card.paid .check-btn{color:rgba(232,228,216,.2)}
+.card.paid .check-btn:hover{color:rgba(232,228,216,.45)}
+.check-circle{width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.check-circle svg{width:10px;height:10px}
+.section-history{border-top:1px solid rgba(232,228,216,.06);padding-top:1.5rem}
+.section-title{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(232,228,216,.22);margin-bottom:1rem;display:flex;align-items:center;gap:.75rem}
+.section-title::after{content:'';flex:1;height:1px;background:rgba(232,228,216,.06)}
+.history-list{display:flex;flex-direction:column;gap:.5rem}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:.6rem .9rem;background:rgba(232,228,216,.02);border:1px solid rgba(232,228,216,.05);border-radius:8px}
+.history-month{font-family:'Space Mono',monospace;font-size:.68rem;color:rgba(232,228,216,.28);letter-spacing:.06em}
+.history-bills{color:rgba(232,228,216,.45);font-size:.75rem;margin-top:2px}
+.history-count{font-family:'Space Mono',monospace;font-size:.7rem;color:#c8f060;opacity:.65}
+.empty-history{font-size:.8rem;color:rgba(232,228,216,.18);font-style:italic;padding:.5rem 0}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#111118;border:1px solid rgba(232,228,216,.12);border-radius:16px;padding:2rem;max-width:380px;width:90%;text-align:center}
+.modal h2{font-size:1.4rem;font-weight:800;color:#c8f060;margin-bottom:.5rem}
+.modal p{font-size:.85rem;color:rgba(232,228,216,.42);margin-bottom:1.5rem;line-height:1.6}
+.modal-btn{background:#c8f060;color:#0a0a0f;border:none;border-radius:8px;padding:.65rem 1.5rem;font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;letter-spacing:.05em;text-transform:uppercase}
+.modal-btn:hover{opacity:.85}
+.who-bar{display:flex;align-items:center;gap:.75rem;background:rgba(232,228,216,.03);border:1px solid rgba(232,228,216,.07);border-radius:10px;padding:.6rem 1rem;margin-bottom:1.5rem;font-size:.8rem}
+.who-label{color:rgba(232,228,216,.35);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;margin-right:.25rem}
+.who-select{background:transparent;border:none;color:#e8e4d8;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;outline:none;-webkit-appearance:none}
+.who-select option{background:#111118;color:#e8e4d8}
+.sync-time{margin-left:auto;font-size:.68rem;font-family:'Space Mono',monospace;color:rgba(232,228,216,.2)}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="app">
+  <div class="who-bar">
+    <span class="who-label">Marcando como:</span>
+    <select class="who-select" id="who-select">
+      <option value="João">João</option>
+      <option value="Namorada">Namorada</option>
+    </select>
+    <span class="sync-time" id="sync-time">—</span>
+  </div>
+
+  <header>
+    <div class="header-left">
+      <h1>Checklist</h1>
+      <div class="month-display" id="month-display"></div>
+    </div>
+    <div class="header-right">
+      <div class="sync-status">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span id="sync-label">conectando...</span>
+      </div>
+      <div class="progress-label">Progreso del mes</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-count" id="progress-count">0 / 0 pagadas</div>
+    </div>
+  </header>
+
+  <div class="alert-banner" id="alert-banner">
+    <span>⚠</span>
+    <span id="alert-text"></span>
+  </div>
+
+  <div class="grid" id="cards-grid"></div>
+
+  <div class="section-history">
+    <div class="section-title">Historial</div>
+    <div class="history-list" id="history-list">
+      <div class="empty-history">Aún sin historial.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="month-roll-modal">
+  <div class="modal">
+    <h2>¡Nuevo mes!</h2>
+    <p id="modal-text"></p>
+    <button class="modal-btn" onclick="document.getElementById('month-roll-modal').classList.remove('open')">Empezar el mes</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIGURACIÓN — estos valores se reemplazan durante el setup ──────────────
+const GIST_ID    = "%%GIST_ID%%";
+const GIST_TOKEN = "%%GIST_TOKEN%%";
+const GIST_FILE  = "contas_data.json";
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BILLS = [
+  {id:'aysa',      name:'AYSA',      day:1},
+  {id:'alquiler',  name:'Alquiler',  day:5},
+  {id:'faculdade', name:'Faculdade', day:10},
+  {id:'expensas',  name:'Expensas',  day:10},
+  {id:'agip',      name:'AGIP',      day:10},
+  {id:'iplan',     name:'iPlan',     day:16},
+  {id:'edesur',    name:'Edesur',    day:27},
+];
+
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+const now = new Date();
+const CY = now.getFullYear(), CM = now.getMonth(), TODAY = now.getDate();
+let data = {months:{}, history:[], _lastMonth:{y:CY, m:CM}};
+let who = localStorage.getItem('bills_who') || 'João';
+
+function mkey(y,m){return `${y}_${m}`}
+function curkey(){return mkey(CY,CM)}
+function getPaid(){return data.months[curkey()]||{}}
+
+function setSyncStatus(state, txt){
+  document.getElementById('sync-dot').className='sync-dot '+state;
+  document.getElementById('sync-label').textContent=txt;
+}
+
+async function gistRead(){
+  setSyncStatus('syncing','sincronizando...');
+  try{
+    const r=await fetch(`https://api.github.com/gists/${GIST_ID}`,{
+      headers:{'Authorization':`token ${GIST_TOKEN}`,'Accept':'application/vnd.github.v3+json'}
+    });
+    if(!r.ok) throw new Error(r.status);
+    const g=await r.json();
+    const raw=g.files[GIST_FILE]?.content||'{}';
+    const d=JSON.parse(raw);
+    data=Object.assign({months:{},history:[],_lastMonth:{y:CY,m:CM}},d);
+    setSyncStatus('ok','sincronizado');
+    document.getElementById('sync-time').textContent='sync '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    return true;
+  }catch(e){
+    setSyncStatus('err','sin conexión');
+    return false;
+  }
+}
+
+async function gistWrite(){
+  setSyncStatus('syncing','guardando...');
+  try{
+    await fetch(`https://api.github.com/gists/${GIST_ID}`,{
+      method:'PATCH',
+      headers:{'Authorization':`token ${GIST_TOKEN}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(data,null,2)}}})
+    });
+    setSyncStatus('ok','guardado');
+    document.getElementById('sync-time').textContent='sync '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    setSyncStatus('err','error al guardar');
+  }
+}
+
+function checkRollover(){
+  const last=data._lastMonth||{y:CY,m:CM};
+  if(last.y===CY&&last.m===CM) return null;
+  const prevPaid=data.months[mkey(last.y,last.m)]||{};
+  const paidCount=Object.values(prevPaid).filter(Boolean).length;
+  data.history=data.history||[];
+  data.history.unshift({
+    year:last.y,month:last.m,paid:paidCount,total:BILLS.length,
+    bills:BILLS.map(b=>({id:b.id,name:b.name,paid:!!prevPaid[b.id]}))
+  });
+  if(data.history.length>24) data.history.length=24;
+  data._lastMonth={y:CY,m:CM};
+  return {prevLabel:`${MONTHS[last.m]} ${last.y}`,paidCount};
+}
+
+function getUrgent(){
+  const paid=getPaid();
+  return BILLS.filter(b=>b.day===TODAY+1&&!paid[b.id]);
+}
+
+function render(){
+  const paid=getPaid();
+  const urgentIds=getUrgent().map(b=>b.id);
+
+  document.getElementById('month-display').textContent=`${MONTHS[CM]} ${CY}`;
+  document.getElementById('who-select').value=who;
+
+  const paidCount=BILLS.filter(b=>paid[b.id]).length;
+  document.getElementById('progress-bar').style.width=(paidCount/BILLS.length*100)+'%';
+  document.getElementById('progress-count').textContent=`${paidCount} / ${BILLS.length} pagadas`;
+
+  const urgentList=getUrgent();
+  const banner=document.getElementById('alert-banner');
+  if(urgentList.length){
+    document.getElementById('alert-text').textContent=`Vence mañana: ${urgentList.map(b=>b.name).join(', ')}`;
+    banner.classList.add('visible');
+  } else banner.classList.remove('visible');
+
+  const grid=document.getElementById('cards-grid');
+  grid.innerHTML='';
+  [...BILLS].sort((a,b)=>a.day-b.day).forEach((bill,i)=>{
+    const isPaid=!!paid[bill.id];
+    const isUrgent=urgentIds.includes(bill.id);
+    const paidBy=isPaid&&paid[bill.id]!==true?paid[bill.id]:null;
+    const card=document.createElement('div');
+    card.className=`card${isPaid?' paid':''}${isUrgent&&!isPaid?' urgent':''}`;
+    card.style.animationDelay=`${i*.05}s`;
+    card.innerHTML=`
+      <div class="card-day">
+        <span class="day-badge">día ${String(bill.day).padStart(2,'0')}</span>
+        ${isUrgent&&!isPaid?'<span class="urgent-dot"></span>':''}
+        ${paidBy?`<span class="paid-by">${paidBy}</span>`:''}
+      </div>
+      <div class="card-name">${bill.name}</div>
+      <button class="check-btn" onclick="toggleBill('${bill.id}')">
+        <span class="check-circle">
+          ${isPaid?'<svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </span>
+        ${isPaid?'pagada':'marcar pagada'}
+      </button>
+    `;
+    grid.appendChild(card);
+  });
+
+  const hist=data.history||[];
+  const histEl=document.getElementById('history-list');
+  if(!hist.length){
+    histEl.innerHTML='<div class="empty-history">Aún sin historial de meses anteriores.</div>';
+  } else {
+    histEl.innerHTML=hist.map(e=>{
+      const bills=e.bills?e.bills.filter(b=>b.paid).map(b=>b.name).join(', ')||'—':'—';
+      return `<div class="history-item">
+        <div>
+          <div class="history-month">${MONTHS[e.month]} ${e.year}</div>
+          <div class="history-bills">${bills}</div>
+        </div>
+        <div class="history-count">${e.paid}/${e.total}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+async function toggleBill(id){
+  const paid=getPaid();
+  if(!data.months[curkey()]) data.months[curkey()]={};
+  if(paid[id]){
+    delete data.months[curkey()][id];
+  } else {
+    data.months[curkey()][id]=who;
+  }
+  render();
+  await gistWrite();
+}
+
+document.getElementById('who-select').addEventListener('change',e=>{
+  who=e.target.value;
+  localStorage.setItem('bills_who',who);
+});
+
+async function poll(){
+  const ok=await gistRead();
+  if(ok) render();
+}
+
+async function init(){
+  who=localStorage.getItem('bills_who')||'João';
+  const ok=await gistRead();
+  if(!ok){render();return;}
+  const rolled=checkRollover();
+  if(rolled){
+    await gistWrite();
+    document.getElementById('modal-text').textContent=
+      `Se archivó ${rolled.prevLabel} (${rolled.paidCount}/${BILLS.length} pagadas). Empezás ${MONTHS[CM]} ${CY} con las cuentas listas.`;
+    document.getElementById('month-roll-modal').classList.add('open');
+  }
+  render();
+  setInterval(poll,30000);
+}
+
+init();
+</script>
+</body>
+</html>
