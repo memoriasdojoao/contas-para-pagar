@@ -9,6 +9,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Syne',sans-serif;background:#0a0a0f;color:#e8e4d8;min-height:100vh;overflow-x:hidden}
+.bg-orbs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.35}
+.orb1{width:500px;height:500px;background:radial-gradient(circle,#7c3aed,transparent);top:-100px;left:-100px;animation:drift1 18s ease-in-out infinite}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,#0ea5e9,transparent);top:40%;right:-80px;animation:drift2 22s ease-in-out infinite}
+.orb3{width:350px;height:350px;background:radial-gradient(circle,#10b981,transparent);bottom:-80px;left:30%;animation:drift3 20s ease-in-out infinite}
+.orb4{width:300px;height:300px;background:radial-gradient(circle,#f59e0b,transparent);bottom:10%;left:-60px;animation:drift1 25s ease-in-out infinite reverse}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,30px)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,40px)}}
+@keyframes drift3{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-30px)}}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='512' height='512' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");background-size:200px}
 .lock-screen{position:fixed;inset:0;background:#0a0a0f;z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
 .lock-screen.hidden{display:none}
@@ -51,11 +60,19 @@ header{display:flex;justify-content:space-between;align-items:flex-start;margin-
 .alert-banner{background:rgba(255,180,50,.07);border:1px solid rgba(255,180,50,.2);border-radius:10px;padding:.75rem 1rem;margin-bottom:1.5rem;display:none;align-items:center;gap:.75rem;font-size:.85rem;color:#fdb834}
 .alert-banner.visible{display:flex}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:1rem;margin-bottom:2.5rem}
-.card{background:rgba(232,228,216,.04);border:1px solid rgba(232,228,216,.1);border-radius:14px;padding:1.25rem 1.25rem 1rem;transition:all .25s ease;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
-.card:hover{border-color:rgba(232,228,216,.2);transform:translateY(-2px)}
-.card.paid{opacity:.35;background:rgba(232,228,216,.02);border-color:rgba(232,228,216,.05)}
-.card.paid:hover{opacity:.5;transform:translateY(-1px)}
-.card.urgent:not(.paid){border-color:rgba(255,180,50,.35);background:rgba(255,180,50,.04)}
+.card-c0{background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(99,102,241,.1)) !important;border-color:rgba(139,92,246,.25) !important}
+.card-c1{background:linear-gradient(135deg,rgba(14,165,233,.2),rgba(6,182,212,.1)) !important;border-color:rgba(56,189,248,.25) !important}
+.card-c2{background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.1)) !important;border-color:rgba(52,211,153,.25) !important}
+.card-c3{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(251,146,60,.1)) !important;border-color:rgba(251,191,36,.25) !important}
+.card-c4{background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(219,39,119,.1)) !important;border-color:rgba(244,114,182,.25) !important}
+.card-c5{background:linear-gradient(135deg,rgba(239,68,68,.2),rgba(220,38,38,.1)) !important;border-color:rgba(248,113,113,.25) !important}
+.card-c6{background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(124,58,237,.1)) !important;border-color:rgba(196,181,253,.25) !important}
+.card{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:1.25rem 1.25rem 1rem;transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;animation:fadeUp .4s ease both;box-shadow:0 4px 24px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.1)}
+.card::before{content:'';position:absolute;inset:0;border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 60%);pointer-events:none}
+.card:hover{border-color:rgba(255,255,255,.25);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.15)}
+.card.paid{opacity:.3;filter:saturate(0.3)}
+.card.paid:hover{opacity:.45;transform:translateY(-2px)}
+.card.urgent:not(.paid){border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08);box-shadow:0 4px 24px rgba(251,191,36,.1),inset 0 1px 0 rgba(251,191,36,.2)}
 .card-day{font-family:'Space Mono',monospace;font-size:.68rem;color:rgba(232,228,216,.3);letter-spacing:.08em;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
 .day-badge{background:rgba(232,228,216,.07);border-radius:4px;padding:1px 6px;font-size:.65rem}
 .urgent-dot{width:6px;height:6px;border-radius:50%;background:#fdb834;margin-left:auto;animation:pulse 1.5s infinite}
@@ -108,6 +125,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;margin-
 </head>
 <body>
 <div class="grain"></div>
+<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div><div class="orb orb4"></div></div>
 
 <div class="lock-screen" id="lock-screen">
   <div class="lock-icon">💰</div>
@@ -345,8 +363,8 @@ function render() {
   [...bills].sort((a,b)=>a.day-b.day).forEach((bill,i)=>{
     const ip=!!paid[bill.id], iu=urgIds.includes(bill.id), pb=ip&&paid[bill.id]!==true?paid[bill.id]:null;
     const c=document.createElement('div');
-    c.className=`card${ip?' paid':''}${iu&&!ip?' urgent':''}`;
-    c.style.animationDelay=`${i*.05}s`;
+    const colors=['card-c0','card-c1','card-c2','card-c3','card-c4','card-c5','card-c6'];
+c.className=`card ${colors[i%colors.length]}${ip?' paid':''}${iu&&!ip?' urgent':''}`;c.style.animationDelay=`${i*.05}s`;
     c.innerHTML=`
       <div class="card-day">
         <span class="day-badge">día ${String(bill.day).padStart(2,'0')}</span>
