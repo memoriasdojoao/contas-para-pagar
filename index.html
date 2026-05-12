@@ -8,9 +8,33 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Syne',sans-serif;background:#0a0a0f;color:#e8e4d8;min-height:100vh;padding:0;overflow-x:hidden}
+body{font-family:'Syne',sans-serif;background:#0a0a0f;color:#e8e4d8;min-height:100vh;overflow-x:hidden}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='512' height='512' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");background-size:200px}
+.lock-screen{position:fixed;inset:0;background:#0a0a0f;z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
+.lock-screen.hidden{display:none}
+.lock-icon{font-size:2.5rem}
+.lock-title{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(232,228,216,.3);font-family:'Space Mono',monospace}
+.lock-hint{font-size:.65rem;color:rgba(232,228,216,.18);font-family:'Space Mono',monospace;margin-top:-.75rem}
+.lock-dots{display:flex;gap:.75rem}
+.lock-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(232,228,216,.2);transition:all .15s}
+.lock-dot.filled{background:#c8f060;border-color:#c8f060}
+.lock-dot.error{background:#e05050;border-color:#e05050;animation:shake .3s ease}
+.lock-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;width:220px}
+.lock-key{background:rgba(232,228,216,.05);border:1px solid rgba(232,228,216,.08);border-radius:10px;padding:.9rem;font-size:1.2rem;font-weight:700;color:#e8e4d8;font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;text-align:center}
+.lock-key:hover{background:rgba(232,228,216,.1);border-color:rgba(232,228,216,.2)}
+.lock-key.pressed{transform:scale(.92);background:rgba(200,240,96,.15);border-color:rgba(200,240,96,.4)}
+.lock-key.clear{font-size:.8rem;color:rgba(232,228,216,.4)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .app{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.who-bar{display:flex;align-items:center;gap:.75rem;background:rgba(232,228,216,.03);border:1px solid rgba(232,228,216,.07);border-radius:10px;padding:.6rem 1rem;margin-bottom:1.5rem}
+.who-label{color:rgba(232,228,216,.35);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase}
+.who-select{background:transparent;border:none;color:#e8e4d8;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;outline:none;-webkit-appearance:none}
+.who-select option{background:#111118}
+.manage-btn{background:rgba(232,228,216,.05);border:1px solid rgba(232,228,216,.1);border-radius:7px;padding:.35rem .75rem;font-size:.68rem;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(232,228,216,.45);cursor:pointer;transition:all .2s}
+.manage-btn:hover{background:rgba(232,228,216,.1);color:#e8e4d8}
+.sync-time{margin-left:auto;font-size:.68rem;font-family:'Space Mono',monospace;color:rgba(232,228,216,.2)}
 header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(232,228,216,.08)}
 .header-left h1{font-size:.95rem;font-weight:400;color:rgba(232,228,216,.4);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.25rem}
 .month-display{font-size:2.2rem;font-weight:800;letter-spacing:-.02em;color:#e8e4d8;line-height:1}
@@ -27,23 +51,21 @@ header{display:flex;justify-content:space-between;align-items:flex-start;margin-
 .alert-banner{background:rgba(255,180,50,.07);border:1px solid rgba(255,180,50,.2);border-radius:10px;padding:.75rem 1rem;margin-bottom:1.5rem;display:none;align-items:center;gap:.75rem;font-size:.85rem;color:#fdb834}
 .alert-banner.visible{display:flex}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:1rem;margin-bottom:2.5rem}
-.card{background:rgba(232,228,216,.04);border:1px solid rgba(232,228,216,.1);border-radius:14px;padding:1.25rem 1.25rem 1rem;cursor:pointer;transition:all .25s ease;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
+.card{background:rgba(232,228,216,.04);border:1px solid rgba(232,228,216,.1);border-radius:14px;padding:1.25rem 1.25rem 1rem;transition:all .25s ease;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
 .card:hover{border-color:rgba(232,228,216,.2);transform:translateY(-2px)}
 .card.paid{opacity:.35;background:rgba(232,228,216,.02);border-color:rgba(232,228,216,.05)}
 .card.paid:hover{opacity:.5;transform:translateY(-1px)}
 .card.urgent:not(.paid){border-color:rgba(255,180,50,.35);background:rgba(255,180,50,.04)}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .card-day{font-family:'Space Mono',monospace;font-size:.68rem;color:rgba(232,228,216,.3);letter-spacing:.08em;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
 .day-badge{background:rgba(232,228,216,.07);border-radius:4px;padding:1px 6px;font-size:.65rem}
 .urgent-dot{width:6px;height:6px;border-radius:50%;background:#fdb834;margin-left:auto;animation:pulse 1.5s infinite}
 .paid-by{font-size:.62rem;color:rgba(232,228,216,.25);margin-left:auto;font-family:'Space Mono',monospace}
 .card-name{font-size:1.05rem;font-weight:700;color:#e8e4d8;margin-bottom:.9rem;letter-spacing:-.01em}
 .card.paid .card-name{text-decoration:line-through;color:rgba(232,228,216,.35)}
+.card-actions{display:flex;align-items:center;justify-content:space-between}
 .check-btn{display:flex;align-items:center;gap:.5rem;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(232,228,216,.35);transition:color .2s;background:none;border:none;cursor:pointer;padding:0;font-family:'Syne',sans-serif}
 .check-btn:hover{color:#c8f060}
 .card.paid .check-btn{color:rgba(232,228,216,.2)}
-.card.paid .check-btn:hover{color:rgba(232,228,216,.45)}
 .check-circle{width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
 .check-circle svg{width:10px;height:10px}
 .section-history{border-top:1px solid rgba(232,228,216,.06);padding-top:1.5rem}
@@ -55,84 +77,71 @@ header{display:flex;justify-content:space-between;align-items:flex-start;margin-
 .history-bills{color:rgba(232,228,216,.45);font-size:.75rem;margin-top:2px}
 .history-count{font-family:'Space Mono',monospace;font-size:.7rem;color:#c8f060;opacity:.65}
 .empty-history{font-size:.8rem;color:rgba(232,228,216,.18);font-style:italic;padding:.5rem 0}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-overlay.open{opacity:1;pointer-events:all}
-.modal{background:#111118;border:1px solid rgba(232,228,216,.12);border-radius:16px;padding:2rem;max-width:380px;width:90%;text-align:center}
-.modal h2{font-size:1.4rem;font-weight:800;color:#c8f060;margin-bottom:.5rem}
-.modal p{font-size:.85rem;color:rgba(232,228,216,.42);margin-bottom:1.5rem;line-height:1.6}
-.modal-btn{background:#c8f060;color:#0a0a0f;border:none;border-radius:8px;padding:.65rem 1.5rem;font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;letter-spacing:.05em;text-transform:uppercase}
-.modal-btn:hover{opacity:.85}
-.who-bar{display:flex;align-items:center;gap:.75rem;background:rgba(232,228,216,.03);border:1px solid rgba(232,228,216,.07);border-radius:10px;padding:.6rem 1rem;margin-bottom:1.5rem;font-size:.8rem}
-.who-label{color:rgba(232,228,216,.35);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;margin-right:.25rem}
-.who-select{background:transparent;border:none;color:#e8e4d8;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;outline:none;-webkit-appearance:none}
-.who-select option{background:#111118;color:#e8e4d8}
-.sync-time{margin-left:auto;font-size:.68rem;font-family:'Space Mono',monospace;color:rgba(232,228,216,.2)}
-.lock-screen{position:fixed;inset:0;background:#0a0a0f;z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
-.lock-screen.hidden{display:none}
-.lock-icon{font-size:2.5rem;margin-bottom:.5rem}
-.lock-title{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(232,228,216,.3);font-family:'Space Mono',monospace}
-.lock-dots{display:flex;gap:.75rem;justify-content:center}
-.lock-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(232,228,216,.2);transition:all .15s}
-.lock-dot.filled{background:#c8f060;border-color:#c8f060}
-.lock-dot.error{background:#e05050;border-color:#e05050;animation:shake .3s ease}
-.lock-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;width:220px}
-.lock-key{background:rgba(232,228,216,.05);border:1px solid rgba(232,228,216,.08);border-radius:10px;padding:.9rem;font-size:1.2rem;font-weight:700;color:#e8e4d8;font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;text-align:center}
-.lock-key:hover{background:rgba(232,228,216,.1);border-color:rgba(232,228,216,.2)}
-.lock-key:active{transform:scale(.94)}
-.lock-key.clear{font-size:.75rem;font-weight:600;letter-spacing:.05em;color:rgba(232,228,216,.4)}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-
-.lock-screen{position:fixed;inset:0;background:#0a0a0f;z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
-.lock-screen.hidden{display:none}
-.lock-icon{font-size:2.5rem;margin-bottom:.5rem}
-.lock-title{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(232,228,216,.3);font-family:'Space Mono',monospace}
-.lock-dots{display:flex;gap:.75rem;justify-content:center}
-.lock-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(232,228,216,.2);transition:all .15s}
-.lock-dot.filled{background:#c8f060;border-color:#c8f060}
-.lock-dot.error{background:#e05050;border-color:#e05050;animation:shake .3s ease}
-.lock-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;width:220px}
-.lock-key{background:rgba(232,228,216,.05);border:1px solid rgba(232,228,216,.08);border-radius:10px;padding:.9rem;font-size:1.2rem;font-weight:700;color:#e8e4d8;font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;text-align:center}
-.lock-key:hover{background:rgba(232,228,216,.1);border-color:rgba(232,228,216,.2)}
-.lock-key:active{transform:scale(.94)}
-.lock-key.clear{font-size:.75rem;font-weight:600;letter-spacing:.05em;color:rgba(232,228,216,.4)}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.modal{background:#111118;border:1px solid rgba(232,228,216,.12);border-radius:16px;padding:2rem;width:90%}
+.modal h2{font-size:1.3rem;font-weight:800;color:#e8e4d8;margin-bottom:1.25rem}
+.modal-btn-row{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem}
+.btn{border:none;border-radius:8px;padding:.6rem 1.25rem;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:opacity .2s}
+.btn-primary{background:#c8f060;color:#0a0a0f}
+.btn-primary:hover{opacity:.85}
+.btn-ghost{background:rgba(232,228,216,.07);color:rgba(232,228,216,.6)}
+.btn-ghost:hover{background:rgba(232,228,216,.12)}
+.form-group{margin-bottom:1rem}
+.form-label{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(232,228,216,.4);margin-bottom:.4rem;display:block}
+.form-input{width:100%;background:rgba(232,228,216,.05);border:1px solid rgba(232,228,216,.12);border-radius:8px;padding:.65rem .9rem;color:#e8e4d8;font-family:'Syne',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:rgba(200,240,96,.4)}
+.bills-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;max-height:280px;overflow-y:auto}
+.bill-row{display:flex;align-items:center;gap:.75rem;background:rgba(232,228,216,.03);border:1px solid rgba(232,228,216,.07);border-radius:8px;padding:.6rem .9rem}
+.bill-row-name{flex:1;font-size:.88rem;font-weight:600}
+.bill-row-day{font-family:'Space Mono',monospace;font-size:.72rem;color:rgba(232,228,216,.4)}
+.bill-row-btns{display:flex;gap:.3rem}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:.9rem;padding:3px 5px;border-radius:4px;transition:background .15s;line-height:1}
+.icon-btn:hover{background:rgba(232,228,216,.1)}
+.add-btn{display:flex;align-items:center;gap:.5rem;background:rgba(200,240,96,.05);border:1px dashed rgba(200,240,96,.2);border-radius:8px;padding:.65rem .9rem;color:rgba(200,240,96,.55);font-family:'Syne',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;width:100%;transition:all .2s}
+.add-btn:hover{background:rgba(200,240,96,.1);color:#c8f060;border-color:rgba(200,240,96,.35)}
+.modal-roll{text-align:center}
+.modal-roll h2{color:#c8f060}
+.modal-roll p{font-size:.85rem;color:rgba(232,228,216,.42);line-height:1.6;margin-bottom:1.5rem}
+.modal-roll .modal-btn-row{justify-content:center}
 </style>
 </head>
 <body>
+<div class="grain"></div>
+
 <div class="lock-screen" id="lock-screen">
   <div class="lock-icon">💰</div>
   <div class="lock-title">Contas do Mês</div>
-  <div class="lock-dots" id="lock-dots">
-    <div class="lock-dot" id="d0"></div>
-    <div class="lock-dot" id="d1"></div>
-    <div class="lock-dot" id="d2"></div>
-    <div class="lock-dot" id="d3"></div>
-    <div class="lock-dot" id="d4"></div>
-    <div class="lock-dot" id="d5"></div>
+  <div class="lock-hint">use o teclado ou clique nos números</div>
+  <div class="lock-dots">
+    <div class="lock-dot" id="d0"></div><div class="lock-dot" id="d1"></div>
+    <div class="lock-dot" id="d2"></div><div class="lock-dot" id="d3"></div>
+    <div class="lock-dot" id="d4"></div><div class="lock-dot" id="d5"></div>
   </div>
   <div class="lock-pad">
-    <button class="lock-key" onclick="lockKey('1')">1</button>
-    <button class="lock-key" onclick="lockKey('2')">2</button>
-    <button class="lock-key" onclick="lockKey('3')">3</button>
-    <button class="lock-key" onclick="lockKey('4')">4</button>
-    <button class="lock-key" onclick="lockKey('5')">5</button>
-    <button class="lock-key" onclick="lockKey('6')">6</button>
-    <button class="lock-key" onclick="lockKey('7')">7</button>
-    <button class="lock-key" onclick="lockKey('8')">8</button>
-    <button class="lock-key" onclick="lockKey('9')">9</button>
-    <button class="lock-key clear" onclick="lockClear()">apagar</button>
-    <button class="lock-key" onclick="lockKey('0')">0</button>
+    <button class="lock-key" id="k1" onclick="lockKey('1')">1</button>
+    <button class="lock-key" id="k2" onclick="lockKey('2')">2</button>
+    <button class="lock-key" id="k3" onclick="lockKey('3')">3</button>
+    <button class="lock-key" id="k4" onclick="lockKey('4')">4</button>
+    <button class="lock-key" id="k5" onclick="lockKey('5')">5</button>
+    <button class="lock-key" id="k6" onclick="lockKey('6')">6</button>
+    <button class="lock-key" id="k7" onclick="lockKey('7')">7</button>
+    <button class="lock-key" id="k8" onclick="lockKey('8')">8</button>
+    <button class="lock-key" id="k9" onclick="lockKey('9')">9</button>
+    <button class="lock-key clear" onclick="lockClear()">⌫</button>
+    <button class="lock-key" id="k0" onclick="lockKey('0')">0</button>
     <button class="lock-key clear" onclick="lockReset()">✕</button>
   </div>
 </div>
-<div class="grain"></div>
-<div class="app">
+
+<div class="app" id="app" style="display:none">
   <div class="who-bar">
     <span class="who-label">Marcando como:</span>
     <select class="who-select" id="who-select">
       <option value="João">João</option>
       <option value="Namorada">Namorada</option>
     </select>
+    <button class="manage-btn" onclick="openManage()">⚙ Gerenciar contas</button>
     <span class="sync-time" id="sync-time">—</span>
   </div>
 
@@ -155,8 +164,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;margin-
   </header>
 
   <div class="alert-banner" id="alert-banner">
-    <span>⚠</span>
-    <span id="alert-text"></span>
+    <span>⚠</span><span id="alert-text"></span>
   </div>
 
   <div class="grid" id="cards-grid"></div>
@@ -169,22 +177,53 @@ header{display:flex;justify-content:space-between;align-items:flex-start;margin-
   </div>
 </div>
 
-<div class="modal-overlay" id="month-roll-modal">
-  <div class="modal">
+<!-- MONTH ROLL -->
+<div class="modal-overlay" id="roll-modal">
+  <div class="modal modal-roll" style="max-width:380px">
     <h2>¡Nuevo mes!</h2>
-    <p id="modal-text"></p>
-    <button class="modal-btn" onclick="document.getElementById('month-roll-modal').classList.remove('open')">Empezar el mes</button>
+    <p id="roll-text"></p>
+    <div class="modal-btn-row">
+      <button class="btn btn-primary" onclick="document.getElementById('roll-modal').classList.remove('open')">Empezar el mes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE -->
+<div class="modal-overlay" id="manage-modal">
+  <div class="modal" style="max-width:460px">
+    <h2>Gerenciar contas</h2>
+    <div class="bills-list" id="bills-list"></div>
+    <button class="add-btn" onclick="openBillForm(null)">+ Adicionar conta</button>
+    <div class="modal-btn-row">
+      <button class="btn btn-ghost" onclick="document.getElementById('manage-modal').classList.remove('open')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- BILL FORM -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal" style="max-width:340px">
+    <h2 id="form-title">Nova conta</h2>
+    <div class="form-group">
+      <label class="form-label">Nome</label>
+      <input class="form-input" id="f-name" type="text" placeholder="ex: Netflix">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dia de vencimento (1–31)</label>
+      <input class="form-input" id="f-day" type="number" min="1" max="31" placeholder="ex: 15">
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn btn-ghost" onclick="document.getElementById('form-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBill()">Salvar</button>
+    </div>
   </div>
 </div>
 
 <script>
-// ── CONFIGURACIÓN — estos valores se reemplazan durante el setup ──────────────
-const GIST_ID    = "c4e73bd11ff8c804bdf2efc495d60c0c";
-const GIST_TOKEN = "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";
-const GIST_FILE  = "contas_data.json";
-// ─────────────────────────────────────────────────────────────────────────────
-
-const BILLS = [
+const WORKER = "https://contas-do-mes.joaovictorcruzsantos.workers.dev";
+const PASS   = "306020";
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DEFAULT_BILLS = [
   {id:'aysa',      name:'AYSA',      day:1},
   {id:'alquiler',  name:'Alquiler',  day:5},
   {id:'faculdade', name:'Faculdade', day:10},
@@ -194,227 +233,230 @@ const BILLS = [
   {id:'edesur',    name:'Edesur',    day:27},
 ];
 
-const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
 const now = new Date();
 const CY = now.getFullYear(), CM = now.getMonth(), TODAY = now.getDate();
-let data = {months:{}, history:[], _lastMonth:{y:CY, m:CM}};
-let who = localStorage.getItem('bills_who') || 'João';
+let data = {months:{},history:[],bills:[...DEFAULT_BILLS],_lastMonth:{y:CY,m:CM}};
+let who = localStorage.getItem('bills_who')||'João';
+let editId = null;
 
-function mkey(y,m){return `${y}_${m}`}
-function curkey(){return mkey(CY,CM)}
-function getPaid(){return data.months[curkey()]||{}}
-
-function setSyncStatus(state, txt){
-  document.getElementById('sync-dot').className='sync-dot '+state;
-  document.getElementById('sync-label').textContent=txt;
-}
-
-async function gistRead(){
-  setSyncStatus('syncing','sincronizando...');
-  try{
-    const r=await fetch(`https://api.github.com/gists/${GIST_ID}`,{
-      headers:{'Authorization':`token ${GIST_TOKEN}`,'Accept':'application/vnd.github.v3+json'}
-    });
-    if(!r.ok) throw new Error(r.status);
-    const g=await r.json();
-    const raw=g.files[GIST_FILE]?.content||'{}';
-    const d=JSON.parse(raw);
-    data=Object.assign({months:{},history:[],_lastMonth:{y:CY,m:CM}},d);
-    setSyncStatus('ok','sincronizado');
-    document.getElementById('sync-time').textContent='sync '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    return true;
-  }catch(e){
-    setSyncStatus('err','sin conexión');
-    return false;
-  }
-}
-
-async function gistWrite(){
-  setSyncStatus('syncing','guardando...');
-  try{
-    await fetch(`https://api.github.com/gists/${GIST_ID}`,{
-      method:'PATCH',
-      headers:{'Authorization':`token ${GIST_TOKEN}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(data,null,2)}}})
-    });
-    setSyncStatus('ok','guardado');
-    document.getElementById('sync-time').textContent='sync '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  }catch(e){
-    setSyncStatus('err','error al guardar');
-  }
-}
-
-function checkRollover(){
-  const last=data._lastMonth||{y:CY,m:CM};
-  if(last.y===CY&&last.m===CM) return null;
-  const prevPaid=data.months[mkey(last.y,last.m)]||{};
-  const paidCount=Object.values(prevPaid).filter(Boolean).length;
-  data.history=data.history||[];
-  data.history.unshift({
-    year:last.y,month:last.m,paid:paidCount,total:BILLS.length,
-    bills:BILLS.map(b=>({id:b.id,name:b.name,paid:!!prevPaid[b.id]}))
-  });
-  if(data.history.length>24) data.history.length=24;
-  data._lastMonth={y:CY,m:CM};
-  return {prevLabel:`${MONTHS[last.m]} ${last.y}`,paidCount};
-}
-
-function getUrgent(){
-  const paid=getPaid();
-  return BILLS.filter(b=>b.day===TODAY+1&&!paid[b.id]);
-}
-
-function render(){
-  const paid=getPaid();
-  const urgentIds=getUrgent().map(b=>b.id);
-
-  document.getElementById('month-display').textContent=`${MONTHS[CM]} ${CY}`;
-  document.getElementById('who-select').value=who;
-
-  const paidCount=BILLS.filter(b=>paid[b.id]).length;
-  document.getElementById('progress-bar').style.width=(paidCount/BILLS.length*100)+'%';
-  document.getElementById('progress-count').textContent=`${paidCount} / ${BILLS.length} pagadas`;
-
-  const urgentList=getUrgent();
-  const banner=document.getElementById('alert-banner');
-  if(urgentList.length){
-    document.getElementById('alert-text').textContent=`Vence mañana: ${urgentList.map(b=>b.name).join(', ')}`;
-    banner.classList.add('visible');
-  } else banner.classList.remove('visible');
-
-  const grid=document.getElementById('cards-grid');
-  grid.innerHTML='';
-  [...BILLS].sort((a,b)=>a.day-b.day).forEach((bill,i)=>{
-    const isPaid=!!paid[bill.id];
-    const isUrgent=urgentIds.includes(bill.id);
-    const paidBy=isPaid&&paid[bill.id]!==true?paid[bill.id]:null;
-    const card=document.createElement('div');
-    card.className=`card${isPaid?' paid':''}${isUrgent&&!isPaid?' urgent':''}`;
-    card.style.animationDelay=`${i*.05}s`;
-    card.innerHTML=`
-      <div class="card-day">
-        <span class="day-badge">día ${String(bill.day).padStart(2,'0')}</span>
-        ${isUrgent&&!isPaid?'<span class="urgent-dot"></span>':''}
-        ${paidBy?`<span class="paid-by">${paidBy}</span>`:''}
-      </div>
-      <div class="card-name">${bill.name}</div>
-      <button class="check-btn" onclick="toggleBill('${bill.id}')">
-        <span class="check-circle">
-          ${isPaid?'<svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
-        </span>
-        ${isPaid?'pagada':'marcar pagada'}
-      </button>
-    `;
-    grid.appendChild(card);
-  });
-
-  const hist=data.history||[];
-  const histEl=document.getElementById('history-list');
-  if(!hist.length){
-    histEl.innerHTML='<div class="empty-history">Aún sin historial de meses anteriores.</div>';
-  } else {
-    histEl.innerHTML=hist.map(e=>{
-      const bills=e.bills?e.bills.filter(b=>b.paid).map(b=>b.name).join(', ')||'—':'—';
-      return `<div class="history-item">
-        <div>
-          <div class="history-month">${MONTHS[e.month]} ${e.year}</div>
-          <div class="history-bills">${bills}</div>
-        </div>
-        <div class="history-count">${e.paid}/${e.total}</div>
-      </div>`;
-    }).join('');
-  }
-}
-
-async function toggleBill(id){
-  const paid=getPaid();
-  if(!data.months[curkey()]) data.months[curkey()]={};
-  if(paid[id]){
-    delete data.months[curkey()][id];
-  } else {
-    data.months[curkey()][id]=who;
-  }
-  render();
-  await gistWrite();
-}
-
-document.getElementById('who-select').addEventListener('change',e=>{
-  who=e.target.value;
-  localStorage.setItem('bills_who',who);
-});
-
-async function poll(){
-  const ok=await gistRead();
-  if(ok) render();
-}
-
-
-// ── LOCK SCREEN ───────────────────────────────────────────────────────────────
-const PASS = "306020";
+// ── LOCK ──────────────────────────────────────────────────────────────────────
 let lockInput = "";
 
 function lockKey(k) {
   if (lockInput.length >= 6) return;
   lockInput += k;
+  const btn = document.getElementById('k'+k);
+  if (btn) { btn.classList.add('pressed'); setTimeout(()=>btn.classList.remove('pressed'),150); }
   updateDots();
-  if (lockInput.length === 6) {
-    setTimeout(() => {
-      if (lockInput === PASS) {
-        sessionStorage.setItem('bills_auth', '1');
-        document.getElementById('lock-screen').classList.add('hidden');
-        init();
-      } else {
-        document.querySelectorAll('.lock-dot').forEach(d => d.classList.add('error'));
-        setTimeout(lockReset, 600);
-      }
-    }, 120);
+  if (lockInput.length === 6) setTimeout(checkPass, 120);
+}
+function lockClear() { lockInput=lockInput.slice(0,-1); updateDots(); }
+function lockReset() { lockInput=""; document.querySelectorAll('.lock-dot').forEach(d=>d.classList.remove('filled','error')); }
+function updateDots() { for(let i=0;i<6;i++){const d=document.getElementById('d'+i);d.classList.remove('error');d.classList.toggle('filled',i<lockInput.length);} }
+function checkPass() {
+  if (lockInput===PASS) {
+    sessionStorage.setItem('bills_auth','1');
+    document.getElementById('lock-screen').classList.add('hidden');
+    document.getElementById('app').style.display='block';
+    init();
+  } else {
+    document.querySelectorAll('.lock-dot').forEach(d=>d.classList.add('error'));
+    setTimeout(lockReset,600);
   }
 }
 
-function lockClear() {
-  lockInput = lockInput.slice(0, -1);
-  updateDots();
-}
-
-function lockReset() {
-  lockInput = "";
-  document.querySelectorAll('.lock-dot').forEach(d => { d.classList.remove('filled','error'); });
-}
-
-function updateDots() {
-  for (let i = 0; i < 6; i++) {
-    const d = document.getElementById('d' + i);
-    d.classList.remove('error');
-    d.classList.toggle('filled', i < lockInput.length);
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lock-screen').classList.contains('hidden')) {
+    if (e.key>='0'&&e.key<='9') lockKey(e.key);
+    else if (e.key==='Backspace') lockClear();
+    else if (e.key==='Escape') lockReset();
   }
-}
+});
 
 function checkAuth() {
-  if (sessionStorage.getItem('bills_auth') === '1') {
+  if (sessionStorage.getItem('bills_auth')==='1') {
     document.getElementById('lock-screen').classList.add('hidden');
+    document.getElementById('app').style.display='block';
     return true;
   }
   return false;
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
-async function init(){
+// ── SYNC ──────────────────────────────────────────────────────────────────────
+function setSS(state,txt) { document.getElementById('sync-dot').className='sync-dot '+state; document.getElementById('sync-label').textContent=txt; }
+
+async function remoteRead() {
+  setSS('syncing','sincronizando...');
+  try {
+    const r = await fetch(WORKER,{cache:'no-store'});
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    data = Object.assign({months:{},history:[],bills:[...DEFAULT_BILLS],_lastMonth:{y:CY,m:CM}},d);
+    if (!data.bills||!data.bills.length) data.bills=[...DEFAULT_BILLS];
+    setSS('ok','sincronizado');
+    document.getElementById('sync-time').textContent='sync '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    return true;
+  } catch(e) { setSS('err','sin conexión'); return false; }
+}
+
+async function remoteWrite() {
+  setSS('syncing','guardando...');
+  try {
+    await fetch(WORKER,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    setSS('ok','guardado');
+    document.getElementById('sync-time').textContent='sync '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) { setSS('err','error al guardar'); }
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+function mkey(y,m){return `${y}_${m}`}
+function curkey(){return mkey(CY,CM)}
+function getPaid(){return data.months[curkey()]||{}}
+function getBills(){return data.bills&&data.bills.length?data.bills:[...DEFAULT_BILLS]}
+function getUrgent(){const p=getPaid();return getBills().filter(b=>b.day===TODAY+1&&!p[b.id])}
+
+function checkRollover() {
+  const last=data._lastMonth||{y:CY,m:CM};
+  if(last.y===CY&&last.m===CM) return null;
+  const prev=data.months[mkey(last.y,last.m)]||{};
+  const bills=getBills();
+  const pc=bills.filter(b=>prev[b.id]).length;
+  data.history=data.history||[];
+  data.history.unshift({year:last.y,month:last.m,paid:pc,total:bills.length,bills:bills.map(b=>({id:b.id,name:b.name,paid:!!prev[b.id]}))});
+  if(data.history.length>24)data.history.length=24;
+  data._lastMonth={y:CY,m:CM};
+  return {label:`${MONTHS[last.m]} ${last.y}`,pc,total:bills.length};
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const paid=getPaid(), bills=getBills(), urgIds=getUrgent().map(b=>b.id);
+  document.getElementById('month-display').textContent=`${MONTHS[CM]} ${CY}`;
+  document.getElementById('who-select').value=who;
+  const pc=bills.filter(b=>paid[b.id]).length;
+  document.getElementById('progress-bar').style.width=(pc/bills.length*100)+'%';
+  document.getElementById('progress-count').textContent=`${pc} / ${bills.length} pagadas`;
+  const urg=getUrgent();
+  const banner=document.getElementById('alert-banner');
+  if(urg.length){document.getElementById('alert-text').textContent=`Vence mañana: ${urg.map(b=>b.name).join(', ')}`;banner.classList.add('visible');}
+  else banner.classList.remove('visible');
+  const grid=document.getElementById('cards-grid');
+  grid.innerHTML='';
+  [...bills].sort((a,b)=>a.day-b.day).forEach((bill,i)=>{
+    const ip=!!paid[bill.id], iu=urgIds.includes(bill.id), pb=ip&&paid[bill.id]!==true?paid[bill.id]:null;
+    const c=document.createElement('div');
+    c.className=`card${ip?' paid':''}${iu&&!ip?' urgent':''}`;
+    c.style.animationDelay=`${i*.05}s`;
+    c.innerHTML=`
+      <div class="card-day">
+        <span class="day-badge">día ${String(bill.day).padStart(2,'0')}</span>
+        ${iu&&!ip?'<span class="urgent-dot"></span>':''}
+        ${pb?`<span class="paid-by">${pb}</span>`:''}
+      </div>
+      <div class="card-name">${bill.name}</div>
+      <div class="card-actions">
+        <button class="check-btn" onclick="toggleBill('${bill.id}')">
+          <span class="check-circle">${ip?'<svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</span>
+          ${ip?'pagada':'marcar pagada'}
+        </button>
+      </div>`;
+    grid.appendChild(c);
+  });
+  const hist=data.history||[];
+  const hel=document.getElementById('history-list');
+  hel.innerHTML=hist.length?hist.map(e=>{
+    const bn=e.bills?e.bills.filter(b=>b.paid).map(b=>b.name).join(', ')||'—':'—';
+    return `<div class="history-item"><div><div class="history-month">${MONTHS[e.month]} ${e.year}</div><div class="history-bills">${bn}</div></div><div class="history-count">${e.paid}/${e.total}</div></div>`;
+  }).join(''):'<div class="empty-history">Aún sin historial de meses anteriores.</div>';
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+async function toggleBill(id) {
+  const paid=getPaid();
+  if(!data.months[curkey()])data.months[curkey()]={};
+  if(paid[id])delete data.months[curkey()][id];
+  else data.months[curkey()][id]=who;
+  render(); await remoteWrite();
+}
+
+document.getElementById('who-select').addEventListener('change',e=>{who=e.target.value;localStorage.setItem('bills_who',who);});
+
+// ── MANAGE ────────────────────────────────────────────────────────────────────
+function openManage() {
+  renderBillsList();
+  document.getElementById('manage-modal').classList.add('open');
+}
+
+function renderBillsList() {
+  const bills=getBills();
+  document.getElementById('bills-list').innerHTML=[...bills].sort((a,b)=>a.day-b.day).map(b=>`
+    <div class="bill-row">
+      <div class="bill-row-name">${b.name}</div>
+      <div class="bill-row-day">día ${String(b.day).padStart(2,'0')}</div>
+      <div class="bill-row-btns">
+        <button class="icon-btn" onclick="openBillForm('${b.id}')">✏️</button>
+        <button class="icon-btn" onclick="deleteBill('${b.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function openBillForm(id) {
+  editId=id;
+  if(id) {
+    const b=getBills().find(x=>x.id===id);
+    document.getElementById('form-title').textContent='Editar conta';
+    document.getElementById('f-name').value=b.name;
+    document.getElementById('f-day').value=b.day;
+  } else {
+    document.getElementById('form-title').textContent='Nova conta';
+    document.getElementById('f-name').value='';
+    document.getElementById('f-day').value='';
+  }
+  document.getElementById('form-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
+
+async function saveBill() {
+  const name=document.getElementById('f-name').value.trim();
+  const day=parseInt(document.getElementById('f-day').value);
+  if(!name||!day||day<1||day>31){
+    document.getElementById('f-name').style.borderColor='rgba(224,80,80,.5)';
+    setTimeout(()=>document.getElementById('f-name').style.borderColor='',1000);
+    return;
+  }
+  if(!data.bills)data.bills=[...DEFAULT_BILLS];
+  if(editId){const i=data.bills.findIndex(b=>b.id===editId);if(i>=0){data.bills[i].name=name;data.bills[i].day=day;}}
+  else{data.bills.push({id:name.toLowerCase().replace(/\s+/g,'-')+'-'+Date.now(),name,day});}
+  document.getElementById('form-modal').classList.remove('open');
+  renderBillsList(); render(); await remoteWrite();
+}
+
+async function deleteBill(id) {
+  if(!confirm('Excluir essa conta?'))return;
+  data.bills=getBills().filter(b=>b.id!==id);
+  Object.keys(data.months).forEach(mk=>{if(data.months[mk])delete data.months[mk][id];});
+  renderBillsList(); render(); await remoteWrite();
+}
+
+document.getElementById('f-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('f-day').focus();});
+document.getElementById('f-day').addEventListener('keydown',e=>{if(e.key==='Enter')saveBill();});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
   who=localStorage.getItem('bills_who')||'João';
-  const ok=await gistRead();
+  const ok=await remoteRead();
   if(!ok){render();return;}
   const rolled=checkRollover();
   if(rolled){
-    await gistWrite();
-    document.getElementById('modal-text').textContent=
-      `Se archivó ${rolled.prevLabel} (${rolled.paidCount}/${BILLS.length} pagadas). Empezás ${MONTHS[CM]} ${CY} con las cuentas listas.`;
-    document.getElementById('month-roll-modal').classList.add('open');
+    await remoteWrite();
+    document.getElementById('roll-text').textContent=`Se archivó ${rolled.label} (${rolled.pc}/${rolled.total} pagadas). Empezás ${MONTHS[CM]} ${CY} con las cuentas listas.`;
+    document.getElementById('roll-modal').classList.add('open');
   }
   render();
-  setInterval(poll,30000);
+  setInterval(async()=>{const ok=await remoteRead();if(ok)render();},30000);
 }
 
-if (!checkAuth()) { /* wait for lock */ } 
+checkAuth();
 </script>
 </body>
 </html>
