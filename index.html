@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contas do Mês</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -66,9 +67,64 @@ header{display:flex;justify-content:space-between;align-items:flex-start;margin-
 .who-select{background:transparent;border:none;color:#e8e4d8;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;outline:none;-webkit-appearance:none}
 .who-select option{background:#111118;color:#e8e4d8}
 .sync-time{margin-left:auto;font-size:.68rem;font-family:'Space Mono',monospace;color:rgba(232,228,216,.2)}
+.lock-screen{position:fixed;inset:0;background:#0a0a0f;z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
+.lock-screen.hidden{display:none}
+.lock-icon{font-size:2.5rem;margin-bottom:.5rem}
+.lock-title{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(232,228,216,.3);font-family:'Space Mono',monospace}
+.lock-dots{display:flex;gap:.75rem;justify-content:center}
+.lock-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(232,228,216,.2);transition:all .15s}
+.lock-dot.filled{background:#c8f060;border-color:#c8f060}
+.lock-dot.error{background:#e05050;border-color:#e05050;animation:shake .3s ease}
+.lock-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;width:220px}
+.lock-key{background:rgba(232,228,216,.05);border:1px solid rgba(232,228,216,.08);border-radius:10px;padding:.9rem;font-size:1.2rem;font-weight:700;color:#e8e4d8;font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;text-align:center}
+.lock-key:hover{background:rgba(232,228,216,.1);border-color:rgba(232,228,216,.2)}
+.lock-key:active{transform:scale(.94)}
+.lock-key.clear{font-size:.75rem;font-weight:600;letter-spacing:.05em;color:rgba(232,228,216,.4)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.lock-screen{position:fixed;inset:0;background:#0a0a0f;z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
+.lock-screen.hidden{display:none}
+.lock-icon{font-size:2.5rem;margin-bottom:.5rem}
+.lock-title{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(232,228,216,.3);font-family:'Space Mono',monospace}
+.lock-dots{display:flex;gap:.75rem;justify-content:center}
+.lock-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(232,228,216,.2);transition:all .15s}
+.lock-dot.filled{background:#c8f060;border-color:#c8f060}
+.lock-dot.error{background:#e05050;border-color:#e05050;animation:shake .3s ease}
+.lock-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;width:220px}
+.lock-key{background:rgba(232,228,216,.05);border:1px solid rgba(232,228,216,.08);border-radius:10px;padding:.9rem;font-size:1.2rem;font-weight:700;color:#e8e4d8;font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;text-align:center}
+.lock-key:hover{background:rgba(232,228,216,.1);border-color:rgba(232,228,216,.2)}
+.lock-key:active{transform:scale(.94)}
+.lock-key.clear{font-size:.75rem;font-weight:600;letter-spacing:.05em;color:rgba(232,228,216,.4)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 </style>
 </head>
 <body>
+<div class="lock-screen" id="lock-screen">
+  <div class="lock-icon">💰</div>
+  <div class="lock-title">Contas do Mês</div>
+  <div class="lock-dots" id="lock-dots">
+    <div class="lock-dot" id="d0"></div>
+    <div class="lock-dot" id="d1"></div>
+    <div class="lock-dot" id="d2"></div>
+    <div class="lock-dot" id="d3"></div>
+    <div class="lock-dot" id="d4"></div>
+    <div class="lock-dot" id="d5"></div>
+  </div>
+  <div class="lock-pad">
+    <button class="lock-key" onclick="lockKey('1')">1</button>
+    <button class="lock-key" onclick="lockKey('2')">2</button>
+    <button class="lock-key" onclick="lockKey('3')">3</button>
+    <button class="lock-key" onclick="lockKey('4')">4</button>
+    <button class="lock-key" onclick="lockKey('5')">5</button>
+    <button class="lock-key" onclick="lockKey('6')">6</button>
+    <button class="lock-key" onclick="lockKey('7')">7</button>
+    <button class="lock-key" onclick="lockKey('8')">8</button>
+    <button class="lock-key" onclick="lockKey('9')">9</button>
+    <button class="lock-key clear" onclick="lockClear()">apagar</button>
+    <button class="lock-key" onclick="lockKey('0')">0</button>
+    <button class="lock-key clear" onclick="lockReset()">✕</button>
+  </div>
+</div>
 <div class="grain"></div>
 <div class="app">
   <div class="who-bar">
@@ -293,6 +349,56 @@ async function poll(){
   if(ok) render();
 }
 
+
+// ── LOCK SCREEN ───────────────────────────────────────────────────────────────
+const PASS = "306020";
+let lockInput = "";
+
+function lockKey(k) {
+  if (lockInput.length >= 6) return;
+  lockInput += k;
+  updateDots();
+  if (lockInput.length === 6) {
+    setTimeout(() => {
+      if (lockInput === PASS) {
+        sessionStorage.setItem('bills_auth', '1');
+        document.getElementById('lock-screen').classList.add('hidden');
+        init();
+      } else {
+        document.querySelectorAll('.lock-dot').forEach(d => d.classList.add('error'));
+        setTimeout(lockReset, 600);
+      }
+    }, 120);
+  }
+}
+
+function lockClear() {
+  lockInput = lockInput.slice(0, -1);
+  updateDots();
+}
+
+function lockReset() {
+  lockInput = "";
+  document.querySelectorAll('.lock-dot').forEach(d => { d.classList.remove('filled','error'); });
+}
+
+function updateDots() {
+  for (let i = 0; i < 6; i++) {
+    const d = document.getElementById('d' + i);
+    d.classList.remove('error');
+    d.classList.toggle('filled', i < lockInput.length);
+  }
+}
+
+function checkAuth() {
+  if (sessionStorage.getItem('bills_auth') === '1') {
+    document.getElementById('lock-screen').classList.add('hidden');
+    return true;
+  }
+  return false;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function init(){
   who=localStorage.getItem('bills_who')||'João';
   const ok=await gistRead();
@@ -308,7 +414,7 @@ async function init(){
   setInterval(poll,30000);
 }
 
-init();
+if (!checkAuth()) { /* wait for lock */ } 
 </script>
 </body>
 </html>
