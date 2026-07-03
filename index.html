@@ -2,6 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Contas">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%230a0a0f'/><text y='340' x='256' text-anchor='middle' font-size='320'>💰</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contas do Mês</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
@@ -121,6 +126,20 @@ header{display:flex;justify-content:space-between;align-items:flex-start;margin-
 .modal-roll h2{color:#c8f060}
 .modal-roll p{font-size:.85rem;color:rgba(232,228,216,.42);line-height:1.6;margin-bottom:1.5rem}
 .modal-roll .modal-btn-row{justify-content:center}
+
+.history-item{cursor:pointer}
+.history-item:hover{border-color:rgba(232,228,216,.15);background:rgba(232,228,216,.04)}
+.month-detail-modal{max-width:440px}
+.month-detail-modal h2{margin-bottom:.25rem}
+.month-detail-subtitle{font-size:.75rem;color:rgba(232,228,216,.35);font-family:'Space Mono',monospace;margin-bottom:1.25rem}
+.detail-bill-row{display:flex;align-items:center;gap:.75rem;padding:.55rem .75rem;border-radius:8px;margin-bottom:.4rem;font-size:.88rem}
+.detail-bill-row.paid-row{background:rgba(200,240,96,.06);border:1px solid rgba(200,240,96,.12)}
+.detail-bill-row.unpaid-row{background:rgba(232,80,80,.05);border:1px solid rgba(232,80,80,.12)}
+.detail-bill-icon{font-size:.9rem;flex-shrink:0}
+.detail-bill-name{flex:1;font-weight:600}
+.detail-bill-day{font-family:'Space Mono',monospace;font-size:.68rem;color:rgba(232,228,216,.35)}
+.detail-bill-who{font-size:.65rem;color:rgba(232,228,216,.3);font-family:'Space Mono',monospace;margin-left:auto}
+.detail-section-label{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(232,228,216,.25);margin:.75rem 0 .4rem}
 </style>
 </head>
 <body>
@@ -384,7 +403,7 @@ c.className=`card ${colors[i%colors.length]}${ip?' paid':''}${iu&&!ip?' urgent':
   const hel=document.getElementById('history-list');
   hel.innerHTML=hist.length?hist.map(e=>{
     const bn=e.bills?e.bills.filter(b=>b.paid).map(b=>b.name).join(', ')||'—':'—';
-    return `<div class="history-item"><div><div class="history-month">${MONTHS[e.month]} ${e.year}</div><div class="history-bills">${bn}</div></div><div class="history-count">${e.paid}/${e.total}</div></div>`;
+    return `<div class="history-item" onclick='openMonthDetail(${JSON.stringify(e).replace(/'/g, "&apos;")})' title="Ver detalhes"><div><div class="history-month">${MONTHS[e.month]} ${e.year}</div><div class="history-bills">${bn}</div></div><div class="history-count">${e.paid}/${e.total} →</div></div>`;
   }).join(''):'<div class="empty-history">Aún sin historial de meses anteriores.</div>';
 }
 
@@ -475,6 +494,58 @@ async function init() {
 }
 
 checkAuth();
+
+function openMonthDetail(entry) {
+  const MONTHS_LOCAL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('detail-title').textContent = MONTHS_LOCAL[entry.month] + ' ' + entry.year;
+  document.getElementById('detail-subtitle').textContent = entry.paid + ' de ' + entry.total + ' contas pagas';
+
+  const paid = (entry.bills || []).filter(b => b.paid);
+  const unpaid = (entry.bills || []).filter(b => !b.paid);
+
+  let html = '';
+
+  if (paid.length) {
+    html += '<div class="detail-section-label">✅ Pagas</div>';
+    paid.forEach(b => {
+      html += `<div class="detail-bill-row paid-row">
+        <span class="detail-bill-icon">✅</span>
+        <span class="detail-bill-name">${b.name}</span>
+      </div>`;
+    });
+  }
+
+  if (unpaid.length) {
+    html += '<div class="detail-section-label">❌ Não pagas</div>';
+    unpaid.forEach(b => {
+      html += `<div class="detail-bill-row unpaid-row">
+        <span class="detail-bill-icon">❌</span>
+        <span class="detail-bill-name">${b.name}</span>
+      </div>`;
+    });
+  }
+
+  if (!paid.length && !unpaid.length) {
+    html = '<div class="empty-history">Sem detalhes disponíveis para este mês.</div>';
+  }
+
+  document.getElementById('detail-body').innerHTML = html;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
 </script>
+
+<!-- MONTH DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal month-detail-modal" style="max-width:440px">
+    <h2 id="detail-title"></h2>
+    <div class="month-detail-subtitle" id="detail-subtitle"></div>
+    <div id="detail-body"></div>
+    <div class="modal-btn-row">
+      <button class="btn btn-ghost" onclick="document.getElementById('detail-modal').classList.remove('open')">Fechar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
