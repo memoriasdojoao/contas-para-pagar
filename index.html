@@ -495,10 +495,21 @@ async function init() {
 
 checkAuth();
 
+let currentDetailEntry = null;
+
 function openMonthDetail(entry) {
+  currentDetailEntry = entry;
+  renderDetailModal();
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function renderDetailModal() {
+  const entry = currentDetailEntry;
   const MONTHS_LOCAL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   document.getElementById('detail-title').textContent = MONTHS_LOCAL[entry.month] + ' ' + entry.year;
-  document.getElementById('detail-subtitle').textContent = entry.paid + ' de ' + entry.total + ' contas pagas';
+
+  const paidCount = (entry.bills || []).filter(b => b.paid).length;
+  document.getElementById('detail-subtitle').textContent = paidCount + ' de ' + entry.total + ' contas pagas';
 
   const paid = (entry.bills || []).filter(b => b.paid);
   const unpaid = (entry.bills || []).filter(b => !b.paid);
@@ -508,19 +519,21 @@ function openMonthDetail(entry) {
   if (paid.length) {
     html += '<div class="detail-section-label">✅ Pagas</div>';
     paid.forEach(b => {
-      html += `<div class="detail-bill-row paid-row">
+      html += `<div class="detail-bill-row paid-row" style="cursor:pointer" onclick="toggleHistoryBill('${b.id}')" title="Clique para desmarcar">
         <span class="detail-bill-icon">✅</span>
         <span class="detail-bill-name">${b.name}</span>
+        <span class="detail-bill-who" style="font-size:.62rem;color:rgba(232,228,216,.25)">clique para desmarcar</span>
       </div>`;
     });
   }
 
   if (unpaid.length) {
-    html += '<div class="detail-section-label">❌ Não pagas</div>';
+    html += '<div class="detail-section-label">❌ Não pagas — clique para marcar como paga</div>';
     unpaid.forEach(b => {
-      html += `<div class="detail-bill-row unpaid-row">
+      html += `<div class="detail-bill-row unpaid-row" style="cursor:pointer" onclick="toggleHistoryBill('${b.id}')" title="Marcar como paga">
         <span class="detail-bill-icon">❌</span>
         <span class="detail-bill-name">${b.name}</span>
+        <span class="detail-bill-who" style="font-size:.62rem;color:rgba(232,228,216,.25)">clique para marcar</span>
       </div>`;
     });
   }
@@ -530,7 +543,38 @@ function openMonthDetail(entry) {
   }
 
   document.getElementById('detail-body').innerHTML = html;
-  document.getElementById('detail-modal').classList.add('open');
+}
+
+async function toggleHistoryBill(billId) {
+  const entry = currentDetailEntry;
+  const mk = mkey(entry.year, entry.month);
+
+  // Ensure the month exists in data.months
+  if (!data.months[mk]) data.months[mk] = {};
+
+  const bill = (entry.bills || []).find(b => b.id === billId);
+  if (!bill) return;
+
+  if (bill.paid) {
+    // unmark
+    delete data.months[mk][billId];
+    bill.paid = false;
+  } else {
+    // mark as paid
+    data.months[mk][billId] = who;
+    bill.paid = true;
+  }
+
+  // Update history entry counts
+  entry.paid = (entry.bills || []).filter(b => b.paid).length;
+
+  // Sync history back into data.history
+  const histIdx = data.history.findIndex(h => h.year === entry.year && h.month === entry.month);
+  if (histIdx >= 0) data.history[histIdx] = entry;
+
+  renderDetailModal();
+  render();
+  await remoteWrite();
 }
 
 </script>
